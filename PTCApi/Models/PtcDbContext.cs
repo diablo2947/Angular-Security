@@ -11,7 +11,7 @@ namespace PTCApi.Model {
     public DbSet<UserBase> Users { get; set; }
     public DbSet<UserClaim> Claims { get; set; }
 
-    protected override void OnModelCreating( ModelBuilder modelBuilder) {
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
       base.OnModelCreating(modelBuilder);
     }
   }
