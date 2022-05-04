@@ -15,6 +15,7 @@ import { ExceptionMessageComponent } from './shared/messaging/exception-message.
 import { ValidationMessageComponent } from './shared/messaging/validation-message.component';
 import { LogMaintenanceComponent } from './shared/logging/log-maintenance.component';
 import { ConfigurationComponent } from './shared/configuration/configuration.component';
+import { LoginComponent } from './public/login.component';
 
 @NgModule({
   declarations: [
@@ -28,7 +29,8 @@ import { ConfigurationComponent } from './shared/configuration/configuration.com
     ExceptionMessageComponent,
     ValidationMessageComponent,
     LogMaintenanceComponent,
-    ConfigurationComponent
+    ConfigurationComponent,
+    LoginComponent
   ],
   imports: [
     BrowserModule,
