@@ -50,7 +50,8 @@
           class="nav-item nav-link"
           *ngIf="securityObject!.isAuthenticated"
           (click)="logout()"
-          >Logout</a
+          routerLink=""
+          >Logout {{ securityObject.userName }}</a
         >
       </div>
     </div>

@@ -14,6 +14,9 @@ using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using PTCApi.Model;
+using Microsoft.IdentityModel.Tokens;
+using PTCApi.EntityClasses;
+using System.Text;
 
 namespace PTCApi {
   public class Startup {
@@ -27,6 +30,14 @@ namespace PTCApi {
     public void ConfigureServices(IServiceCollection services) {
       // Tell this project to allow CORS
       services.AddCors();
+
+      ConfigureJwt(services);
+      
+      services.AddAuthorization(cfg => {
+        // NOTE: The claim key and value are case-sensitive
+        cfg.AddPolicy("CanAccessProducts", p =>
+           p.RequireClaim("CanAccessProducts", "true"));
+      });
 
       // Convert JSON from Camel Case to Pascal Case
       services.AddControllers().AddJsonOptions(
@@ -58,16 +69,60 @@ namespace PTCApi {
 
       app.UseRouting();
 
-      app.UseAuthorization();
-
+      // NOTE: Make sure CORS comes before UseAuthentication and UseAuthorization
       app.UseCors(options =>
         options.WithOrigins("http://localhost:4200")
         .AllowAnyMethod().AllowAnyHeader()
       );
 
+      app.UseAuthentication();
+      app.UseAuthorization();
+
       app.UseEndpoints(endpoints => {
         endpoints.MapControllers();
       });
     }
+
+    public void ConfigureJwt(IServiceCollection services) {
+      // Get JWT Token Settings from appsettings.json file
+      JwtSettings settings = GetJwtSettings();
+      services.AddSingleton<JwtSettings>(settings);
+      services.AddAuthentication(options => {
+        options.DefaultAuthenticateScheme = "JwtBearer";
+        options.DefaultChallengeScheme = "JwtBearer";
+      })
+      .AddJwtBearer("JwtBearer", jwtBearerOptions => {
+        jwtBearerOptions.TokenValidationParameters =
+            new TokenValidationParameters
+            {
+              ValidateIssuerSigningKey = true,
+              IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(settings.Key)),
+              ValidateIssuer = true,
+              ValidIssuer = settings.Issuer,
+
+              ValidateAudience = true,
+              ValidAudience = settings.Audience,
+
+              ValidateLifetime = true,
+              ClockSkew = TimeSpan.FromMinutes(
+                       settings.MinutesToExpiration)
+            };
+      });
+    }
+
+    public JwtSettings GetJwtSettings() {
+      JwtSettings settings = new JwtSettings();
+
+      settings.Key = Configuration["JwtToken:key"];
+      settings.Audience = Configuration["JwtToken:audience"];
+      settings.Issuer = Configuration["JwtToken:issuer"];
+      settings.MinutesToExpiration =
+       Convert.ToInt32(
+          Configuration["JwtToken:minutestoexpiration"]);
+
+      return settings;
+    }
+
   }
 }
